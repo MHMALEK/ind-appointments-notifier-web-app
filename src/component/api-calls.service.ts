@@ -18,21 +18,25 @@ export const fetchIndServicesAndDesksList = async () => {
   }
 };
 
-export const postIndNotifierRequest = async (payload: any) => {
-  try {
-    const res: any = await axios.post(
-      `${process.env.REACT_APP_BASE_API_URL}/new-appointment-notifier`,
-      {
-        ...payload,
-      }
-    );
+export const postIndNotifierRequest = (payload: any) =>
+  new Promise(async (resolve, reject) => {
+    try {
+      const res: any = await axios.post(
+        `${process.env.REACT_APP_BASE_API_URL}/notification/new`,
+        {
+          ...payload,
+        }
+      );
 
-    console.log("res", res);
-    return res;
-  } catch (e: any) {
-    throw new Error(e);
-  }
-};
+      resolve(res);
+    } catch (e: any) {
+      if (e.response?.data) {
+        reject(e.response.data);
+      } else {
+        reject(e);
+      }
+    }
+  });
 
 export const postIndNotifierRequestEmail = async (payload: any) => {
   try {
@@ -59,4 +63,43 @@ export const getSoonestAppointment = async (
   );
 
   return res;
+};
+
+const fetchAllAppointmentsForAService = async (code: any, desks: any) => {
+  let results: any = [];
+
+  for (let i = 0; i < desks.length; i++) {
+    const { data } = await getSoonestAppointment(code, desks[i].code);
+    if (data) {
+      results.push({
+        ...data,
+        deskCode: desks[i].code,
+        deskLabel: desks[i].label,
+      });
+    }
+  }
+
+  return results;
+};
+export const getSoonestAppointmentsForAllDesksAndServices = async () => {
+  let appointments: any = {};
+
+  try {
+    const res = await client.getEntry("6iIBzea4MHGAkhyNYr3urK");
+    const { servicesByDesks } = (res.fields as any).indData.data;
+    const servicesByDesksArray = Object.values(servicesByDesks) as any;
+
+    for (let i = 0; i < servicesByDesksArray.length; i++) {
+      const appointment = await fetchAllAppointmentsForAService(
+        servicesByDesksArray[i].code,
+        servicesByDesksArray[i].desks
+      );
+
+      const appointmentData = appointment.filter((item: any) => item);
+      appointments[servicesByDesksArray[i].code] = [...appointmentData];
+    }
+    return appointments;
+  } catch (e) {
+    console.log(e);
+  }
 };

@@ -136,17 +136,13 @@ function DashboardContent() {
         >
           <Toolbar />
           <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={12} lg={12}>
-                <NotifyMeComponent />
-              </Grid>
+            <NotifyMeComponent />
 
-              {/* Recent Orders */}
-              <Grid item xs={12}>
-                <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-                  <Orders />
-                </Paper>
-              </Grid>
+            {/* Recent Orders */}
+            <Grid item xs={12}>
+              <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
+                <Orders />
+              </Paper>
             </Grid>
             <Copyright sx={{ pt: 4 }} />
           </Container>

@@ -17,6 +17,7 @@ import {
   Alert,
   AlertTitle,
   Backdrop,
+  ButtonGroup,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -40,6 +41,8 @@ import {
 import {
   fetchIndServicesAndDesksList,
   getSoonestAppointment,
+  getSoonestAppointmentsForAllDesksAndServices,
+  postIndNotifierRequest,
   postIndNotifierRequestEmail,
 } from "../api-calls.service";
 import DatePicker from "../date-picker";
@@ -73,6 +76,8 @@ export default function NotifyMeComponent() {
   const [loadingForAppointment, setLoadingForAppointment] =
     React.useState(false);
   const [dialogSuccessOpen, setDialogSuccessOpen] = React.useState(false);
+  const [dialogErrorOpen, setDialogErrorOpen] = React.useState(false);
+  const [errorDesk, setErrorDesk] = React.useState<string | null>(null);
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -80,7 +85,7 @@ export default function NotifyMeComponent() {
   const [loadingCreate, setLoadingCreate] = React.useState<boolean>(false);
 
   const [selectedNotificationType, setSelectedNotificationType] =
-    React.useState(null);
+    React.useState("email");
 
   const handleNext = () => {
     setActiveStep(activeStep + 1);
@@ -109,7 +114,7 @@ export default function NotifyMeComponent() {
     });
   }, []);
 
-  //   console.log("desksAndServicesForm", servicesForm);
+  // console.log("desksAndServicesForm", allAppointments);
 
   const getDesksForSelectedService = (service: string) => {
     console.log("service", service, desksAndServices);
@@ -172,14 +177,24 @@ export default function NotifyMeComponent() {
       date: selectedDate,
     };
     setLoadingCreate(true);
-    try {
-      await postIndNotifierRequestEmail(payload);
-      setDialogSuccessOpen(true);
-    } catch (e) {
-      throw new Error("asd");
-    } finally {
-      setLoadingCreate(false);
-    }
+    postIndNotifierRequest(payload)
+      .then((res) => {
+        console.log("ere", res);
+        setDialogSuccessOpen(true);
+      })
+      .catch((e) => {
+        console.log(e);
+        setDialogErrorOpen(true);
+        if (
+          e.statusCode === 400 &&
+          e.message.includes("email is not verified")
+        ) {
+          setErrorDesk(
+            "Your email is not verified in our system yet. Please go to your email and verify it. After verify your email, Comeback and submit this request again."
+          );
+        }
+      })
+      .finally(() => setLoadingCreate(false));
   };
 
   const onDateChange = (value: string) => {
@@ -194,60 +209,55 @@ export default function NotifyMeComponent() {
     setDialogSuccessOpen(false);
   };
 
+  const handleCloseErrorDialog = () => {
+    setDialogErrorOpen(false);
+    setErrorDesk(null);
+  };
+
   function getStepContent(step: number) {
     switch (step) {
       case 0:
         return (
           <>
-            <Grid
-              container
-              display="flex"
-              alignItems={"center"}
-              justifyContent="center"
-              flexDirection={"column"}
-            >
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">
-                  Select service
-                </InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="select-service-select"
-                  value={selectedService}
-                  label="Select service"
-                  onChange={handleServiceChange}
-                  sx={{ mb: 2 }}
-                >
-                  {servicesForm.map((service: any) => {
-                    return (
-                      <MenuItem key={service.code} value={service.code}>
-                        {capitalizeFirstLetter(service.label)}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth disabled={!selectedService}>
-                <InputLabel id="demo-simple-select-label">
-                  Select desk
-                </InputLabel>
-                <Select
-                  labelId="select-desk-select"
-                  id="select-desk"
-                  value={selectedDesk}
-                  label="Select desk"
-                  onChange={handleDeskChange}
-                >
-                  {deskForm.map((desk: any) => {
-                    return (
-                      <MenuItem key={desk.code} value={desk.code}>
-                        {capitalizeFirstLetter(desk.label)}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </Grid>
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">
+                Select service
+              </InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="select-service-select"
+                value={selectedService}
+                label="Select service"
+                onChange={handleServiceChange}
+                sx={{ mb: 2 }}
+              >
+                {servicesForm.map((service: any) => {
+                  return (
+                    <MenuItem key={service.code} value={service.code}>
+                      {capitalizeFirstLetter(service.label)}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth disabled={!selectedService}>
+              <InputLabel id="demo-simple-select-label">Select desk</InputLabel>
+              <Select
+                labelId="select-desk-select"
+                id="select-desk"
+                value={selectedDesk}
+                label="Select desk"
+                onChange={handleDeskChange}
+              >
+                {deskForm.map((desk: any) => {
+                  return (
+                    <MenuItem key={desk.code} value={desk.code}>
+                      {capitalizeFirstLetter(desk.label)}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
 
             <Dialog
               open={dialogOpen}
@@ -288,151 +298,137 @@ export default function NotifyMeComponent() {
 
               <DialogActions>
                 <Button onClick={handleClose}>Close</Button>
-                <Button onClick={handleGoNextFromDialog} autoFocus>
+                {/* <Button onClick={handleGoNextFromDialog} autoFocus>
                   Next
-                </Button>
+                </Button> */}
               </DialogActions>
             </Dialog>
 
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              disabled={!selectedDesk || !selectedService}
-              sx={{ mt: 3, ml: 1 }}
-            >
-              Next (Select a date)
-            </Button>
+            <Box sx={{ mx: "auto", textAlign: "center", mt: 8 }}>
+              {/* <Button variant="outlined">Outlined</Button> */}
+
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={!selectedDesk || !selectedService}
+              >
+                Next - choose a date
+              </Button>
+            </Box>
           </>
         );
       case 1:
         return (
           <>
-            <Grid
-              container
-              spacing={2}
-              display="flex"
-              alignItems={"center"}
-              justifyContent="center"
-              flexDirection={"column"}
+            <Alert
+              severity="info"
+              sx={{ mt: 2, mb: 6, maxWidth: "70%", mx: "auto" }}
             >
-              <Grid
-                item
-                xs={12}
-                md={8}
-                lg={8}
-                alignItems={"center"}
-                flexDirection="column"
-              >
-                <Alert severity="info" sx={{ mt: 4 }}>
-                  <AlertTitle>
-                    {" "}
-                    You've selected{" "}
-                    {capitalizeFirstLetter(
-                      desksAndServices[selectedService].label
-                    )}{" "}
-                    for {capitalizeFirstLetter(desks[selectedDesk])}
-                  </AlertTitle>
-                  Select a date below. We will check IND website every 30
-                  minutes and if a new slot became available, we will notify
-                  you!
-                </Alert>
+              <AlertTitle>
+                {" "}
+                You've selected{" "}
+                {capitalizeFirstLetter(
+                  desksAndServices[selectedService].label
+                )}{" "}
+                for {capitalizeFirstLetter(desks[selectedDesk])}
+              </AlertTitle>
+              Select a date below. We will check IND website every 30 minutes
+            </Alert>
 
-                <DatePicker onDateChange={onDateChange} />
-              </Grid>
-              <Button variant="contained" onClick={handleNext}>
+            <DatePicker onDateChange={onDateChange} />
+
+            <Box sx={{ mx: "auto", textAlign: "center", mt: 8 }}>
+              <Button variant="outlined" onClick={handleBack} sx={{ mr: 1 }}>
+                Back
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={!selectedDesk || !selectedService}
+              >
                 Next
               </Button>
-            </Grid>
+            </Box>
           </>
         );
       case 2:
         return (
           <>
-            <Grid
-              container
-              display="flex"
-              alignItems={"center"}
-              justifyContent="center"
-              flexDirection={"column"}
-            >
-              <Grid
-                item
-                xs={12}
-                md={12}
-                lg={12}
-                alignItems={"center"}
-                flexDirection="column"
+            <FormControl>
+              <FormLabel id="demo-radio-buttons-group-label">
+                Please select your prefered way to get notification
+              </FormLabel>
+              <RadioGroup
+                onChange={handleSelectNotificationChange}
+                aria-labelledby="demo-radio-buttons-group-label"
+                defaultValue={selectedNotificationType}
+                name="radio-buttons-group"
               >
-                <FormControl>
-                  <FormLabel id="demo-radio-buttons-group-label">
-                    Please select your prefered way to get notification
-                  </FormLabel>
-                  <RadioGroup
-                    onChange={handleSelectNotificationChange}
-                    aria-labelledby="demo-radio-buttons-group-label"
-                    defaultValue={selectedNotificationType}
-                    name="radio-buttons-group"
-                  >
-                    <FormControlLabel
-                      value="telegram"
-                      control={<Radio />}
-                      label="Telegram Bot"
-                    />
-                    <FormControlLabel
-                      value="email"
-                      control={<Radio />}
-                      label="Email"
-                    />
-                  </RadioGroup>
-                </FormControl>
+                <FormControlLabel
+                  value="email"
+                  control={<Radio />}
+                  label="Email"
+                />
+                <FormControlLabel
+                  value="telegram"
+                  control={<Radio />}
+                  label="Telegram Bot"
+                />
+              </RadioGroup>
+            </FormControl>
 
-                {selectedNotificationType === "email" ? (
-                  <>
-                    <Typography sx={{ mt: 4 }}>
-                      @Email address (to get notified when new slot becames
-                      available)
-                    </Typography>
-                    <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      name="email"
-                      label="email"
-                      type="email"
-                      id="email"
-                      autoComplete="email"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      error={formik.errors.email ? true : false}
-                      helperText={
-                        formik.errors.email ? "please enter a valid email" : ""
-                      }
-                    />{" "}
-                  </>
-                ) : (
-                  <p>
-                    Please use our Telegram bot to get a notification from
-                    there!
-                    <Link
-                      href="https://t.me/ind_appointment_notifier_bot"
-                      variant="body2"
-                    >
-                      <TelegramIcon />
-                    </Link>
-                  </p>
-                )}
-
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={shouldDisableButton()}
-                  sx={{ my: 4 }}
-                  onClick={handleCreateNotifierRequest}
+            {selectedNotificationType === "email" ? (
+              <>
+                <Typography sx={{ mt: 4 }}>
+                  @Email address (to get notified when new slot becames
+                  available)
+                </Typography>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="email"
+                  label="email"
+                  type="email"
+                  id="email"
+                  autoComplete="email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  error={formik.errors.email ? true : false}
+                  helperText={
+                    formik.errors.email ? "please enter a valid email" : ""
+                  }
+                />{" "}
+              </>
+            ) : (
+              <Alert severity="warning">
+                To get notification Via Telegram, you need to use our Telegram
+                Bot.{" "}
+                <Link
+                  href="https://t.me/ind_appointment_notifier_bot"
+                  variant="body2"
                 >
-                  Notify me!
-                </Button>
-              </Grid>
-            </Grid>
+                  Go to Telegram bot
+                  {/* <TelegramIcon /> */}
+                </Link>
+              </Alert>
+            )}
+
+            <Box sx={{ mx: "auto" }}>
+              <Button variant="outlined" onClick={handleBack} sx={{ mr: 1 }}>
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={shouldDisableButton()}
+                sx={{ my: 4 }}
+                onClick={handleCreateNotifierRequest}
+              >
+                Notify me!
+              </Button>
+            </Box>
 
             <Backdrop
               sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -467,6 +463,31 @@ export default function NotifyMeComponent() {
                 <Button onClick={handleCloseSuccessDialog}>Close</Button>
               </DialogActions>
             </Dialog>
+
+            <Dialog
+              open={dialogErrorOpen}
+              onClose={handleCloseErrorDialog}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+            >
+              <DialogTitle id="alert-dialog-title">Error</DialogTitle>
+              <DialogContent>
+                {loadingForAppointment ? (
+                  <CircularProgress color="inherit" />
+                ) : (
+                  <>
+                    <Typography fontSize={15} fontWeight="bold">
+                      {errorDesk ||
+                        "Something went wrong! Please try again and if issue still exist, contact us via mhos.malek@gmail.com"}
+                    </Typography>
+                  </>
+                )}
+              </DialogContent>
+
+              <DialogActions>
+                <Button onClick={handleCloseErrorDialog}>Close</Button>
+              </DialogActions>
+            </Dialog>
           </>
         );
       default:
@@ -479,20 +500,13 @@ export default function NotifyMeComponent() {
       <CssBaseline />
       <Paper
         variant="outlined"
-        sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
+        sx={{ my: { xs: 3, md: 3 }, p: { xs: 2, md: 3 } }}
       >
         <Box
           sx={{
             marginTop: 2,
-            marginBottom: 6,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
           }}
         >
-          <Avatar sx={{ m: 2, bgcolor: "primary.main" }}>
-            <QueryStatsIcon />
-          </Avatar>
           <Typography component="h1" variant="h5" sx={{ mb: 4 }}>
             IND appointments
           </Typography>
@@ -504,28 +518,8 @@ export default function NotifyMeComponent() {
               </Step>
             ))}
           </Stepper>
-          {activeStep === steps.length ? (
-            <React.Fragment>
-              <Typography variant="h5" gutterBottom>
-                Thank you for your order.
-              </Typography>
-              <Typography variant="subtitle1">
-                Your order number is #2001539. We have emailed your order
-                confirmation, and will send you an update when your order has
-                shipped.
-              </Typography>
-            </React.Fragment>
-          ) : (
-            <React.Fragment>
-              {getStepContent(activeStep)}
 
-              {activeStep !== 0 && (
-                <Button onClick={handleBack} sx={{ mt: 3, ml: 1 }}>
-                  Back
-                </Button>
-              )}
-            </React.Fragment>
-          )}
+          <React.Fragment>{getStepContent(activeStep)}</React.Fragment>
 
           <Grid
             container
@@ -534,7 +528,7 @@ export default function NotifyMeComponent() {
             textAlign={"center"}
             sx={{ mt: 7 }}
           >
-            <Grid item xs>
+            {/* <Grid item xs>
               <Typography sx={{ mt: 5 }}>Find us on Telegram bot</Typography>
               <Link
                 href="https://t.me/ind_appointment_notifier_bot"
@@ -542,7 +536,7 @@ export default function NotifyMeComponent() {
               >
                 <TelegramIcon />
               </Link>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Box>
       </Paper>
