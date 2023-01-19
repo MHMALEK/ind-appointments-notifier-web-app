@@ -58,11 +58,7 @@ function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-const steps = [
-  "Select Service And Desk",
-  "Select Date",
-  "How should we notify you?",
-];
+const steps = ["Service", "Date", "Notification"];
 
 export default function NotifyMeComponent() {
   const [selectedService, setSelectedService] = React.useState("");
@@ -259,6 +255,10 @@ export default function NotifyMeComponent() {
               </Select>
             </FormControl>
 
+            <Typography sx={{ mt: 3, px: 1 }}>
+              Select IND Desk and service. We will check soonest available slot.
+            </Typography>
+
             <Dialog
               open={dialogOpen}
               onClose={handleClose}
@@ -320,10 +320,7 @@ export default function NotifyMeComponent() {
       case 1:
         return (
           <>
-            <Alert
-              severity="info"
-              sx={{ mt: 2, mb: 6, maxWidth: "70%", mx: "auto" }}
-            >
+            <Alert severity="info" sx={{ mt: 0, mb: 2, mx: "auto" }}>
               <AlertTitle>
                 {" "}
                 You've selected{" "}
@@ -332,10 +329,16 @@ export default function NotifyMeComponent() {
                 )}{" "}
                 for {capitalizeFirstLetter(desks[selectedDesk])}
               </AlertTitle>
-              Select a date below. We will check IND website every 30 minutes
             </Alert>
 
-            <DatePicker onDateChange={onDateChange} />
+            <Paper>
+              <DatePicker onDateChange={onDateChange} />
+            </Paper>
+
+            <Typography sx={{ mt: 3, px: 1 }}>
+              Select a date that you want to be notified if a sooner slot became
+              available
+            </Typography>
 
             <Box sx={{ mx: "auto", textAlign: "center", mt: 8 }}>
               <Button variant="outlined" onClick={handleBack} sx={{ mr: 1 }}>
@@ -500,17 +503,13 @@ export default function NotifyMeComponent() {
       <CssBaseline />
       <Paper
         variant="outlined"
-        sx={{ my: { xs: 3, md: 3 }, p: { xs: 2, md: 3 } }}
+        sx={{ my: { xs: 3, md: 2 }, p: { xs: 2, md: 3 } }}
       >
         <Box
           sx={{
             marginTop: 2,
           }}
         >
-          <Typography component="h1" variant="h5" sx={{ mb: 4 }}>
-            IND appointments
-          </Typography>
-
           <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
             {steps.map((label) => (
               <Step key={label}>
@@ -527,17 +526,7 @@ export default function NotifyMeComponent() {
             alignItems="center"
             textAlign={"center"}
             sx={{ mt: 7 }}
-          >
-            {/* <Grid item xs>
-              <Typography sx={{ mt: 5 }}>Find us on Telegram bot</Typography>
-              <Link
-                href="https://t.me/ind_appointment_notifier_bot"
-                variant="body2"
-              >
-                <TelegramIcon />
-              </Link>
-            </Grid> */}
-          </Grid>
+          ></Grid>
         </Box>
       </Paper>
     </>

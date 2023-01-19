@@ -21,21 +21,8 @@ import { mainListItems, secondaryListItems } from "./listItems";
 import Deposits from "./Deposits";
 import Orders from "./Orders";
 import NotifyMeComponent from "../component/notify-me";
-
-function Copyright(props: any) {
-  return (
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      align="center"
-      {...props}
-    >
-      <Link color="inherit" href="https://web.indapplication.nl">
-        With Love for everyone!
-      </Link>{" "}
-    </Typography>
-  );
-}
+import Faq from "../component/faq";
+import Title from "./Title";
 
 const drawerWidth: number = 240;
 
@@ -61,40 +48,9 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme, open }) => ({
-  "& .MuiDrawer-paper": {
-    position: "relative",
-    whiteSpace: "nowrap",
-    width: drawerWidth,
-    transition: theme.transitions.create("width", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    boxSizing: "border-box",
-    ...(!open && {
-      overflowX: "hidden",
-      transition: theme.transitions.create("width", {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
-      width: theme.spacing(7),
-      [theme.breakpoints.up("sm")]: {
-        width: theme.spacing(9),
-      },
-    }),
-  },
-}));
-
 const mdTheme = createTheme();
 
 function DashboardContent() {
-  const [open, setOpen] = React.useState(true);
-  const toggleDrawer = () => {
-    setOpen(!open);
-  };
-
   return (
     <ThemeProvider theme={mdTheme}>
       <Box sx={{ display: "flex" }}>
@@ -105,7 +61,7 @@ function DashboardContent() {
               pr: "24px", // keep right padding when drawer closed
             }}
           >
-            <Typography
+            {/* <Typography
               component="h1"
               variant="h6"
               color="inherit"
@@ -113,12 +69,21 @@ function DashboardContent() {
               sx={{ flexGrow: 1 }}
             >
               Dashboard
+            </Typography> */}
+            <Typography
+              component="h1"
+              variant="h6"
+              color="inherit"
+              noWrap
+              sx={{ flexGrow: 1, textAlign: "center" }}
+            >
+              IND Appointment application
             </Typography>
-            <IconButton color="inherit">
+            {/* <IconButton color="inherit">
               <Badge badgeContent={4} color="secondary">
                 <NotificationsIcon />
               </Badge>
-            </IconButton>
+            </IconButton> */}
           </Toolbar>
         </AppBar>
 
@@ -135,7 +100,7 @@ function DashboardContent() {
           }}
         >
           <Toolbar />
-          <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+          <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
             <NotifyMeComponent />
 
             {/* Recent Orders */}
@@ -144,7 +109,25 @@ function DashboardContent() {
                 <Orders />
               </Paper>
             </Grid>
-            <Copyright sx={{ pt: 4 }} />
+            <Paper
+              sx={{
+                p: 4,
+                mt: 2,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Typography sx={{ fontSize: 14 }}>
+                This is a simple app to help you find out about soonest{" "}
+                <a href="https://ind.nl/">IND appointment.</a> We're checking
+                IND for appointment slots and will notify you when a sooner slot
+                became available.
+              </Typography>
+              <Typography sx={{ fontSize: 13 }}>
+                <b>We are not IND and we do not belong to IND</b> and we can not
+                do anything or anyhelp with IND proccees.
+              </Typography>
+            </Paper>
           </Container>
         </Box>
       </Box>

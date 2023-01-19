@@ -5,6 +5,8 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import SwipeableViews from "react-swipeable-views";
+
 import Title from "./Title";
 import { getSoonestAppointmentsForAllDesksAndServices } from "../component/api-calls.service";
 import {
@@ -47,12 +49,12 @@ export default function Orders() {
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  const handleChangeIndex = (index: number) => {
+    setValue(index);
+  };
   return (
     <React.Fragment>
-      <Box sx={{ my: 4, textAlign: "center" }}>
-        <Title>Available appointments by services</Title>
-      </Box>
-
       {!allAppointments.doc ? (
         <CircularProgress
           sx={{ textAlign: "center", mx: "auto", mb: 5, mt: 3 }}
@@ -60,19 +62,22 @@ export default function Orders() {
         />
       ) : (
         <Box sx={{ width: "100%" }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          {/* <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Tabs
               value={value}
               onChange={handleChange}
               aria-label="basic tabs example"
+              variant="fullWidth"
             >
-              <Tab label="collect residency documents" />
+              <Tab label="" />
               <Tab label="Biometrics" />
               <Tab label="Return visa" />
               <Tab label="Residence endorsement sticker" />
             </Tabs>
           </Box>
-          <TabPanel value={value} index={0}>
+          <SwipeableViews index={value} onChangeIndex={handleChangeIndex}> */}
+          <Title>collect residency documents</Title>
+          <Box sx={{ my: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -91,13 +96,24 @@ export default function Orders() {
                     <TableCell>
                       {row.date} from {row.startTime} to {row.endTime}
                     </TableCell>
-                    <TableCell align="right">Book this one</TableCell>
+                    <TableCell align="right">
+                      {" "}
+                      <a
+                        href="https://oap.ind.nl/oap/en/#/doc"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Book
+                      </a>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TabPanel>
-          <TabPanel value={value} index={1}>
+          </Box>
+
+          <Title>Biometrics</Title>
+          <Box sx={{ my: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -116,13 +132,23 @@ export default function Orders() {
                     <TableCell>
                       {row.date} from {row.startTime} to {row.endTime}
                     </TableCell>
-                    <TableCell align="right">Book this one</TableCell>
+                    <TableCell align="right">
+                      {" "}
+                      <a
+                        href="https://oap.ind.nl/oap/en/#/BIO"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Book
+                      </a>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TabPanel>
-          <TabPanel value={value} index={2}>
+          </Box>
+          <Title>Residence endorsement sticker</Title>
+          <Box sx={{ my: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -141,13 +167,23 @@ export default function Orders() {
                     <TableCell>
                       {row.date} from {row.startTime} to {row.endTime}
                     </TableCell>
-                    <TableCell align="right">Book this one</TableCell>
+                    <TableCell align="right">
+                      {" "}
+                      <a
+                        href="https://oap.ind.nl/oap/en/#/VAA"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Book
+                      </a>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TabPanel>
-          <TabPanel value={value} index={3}>
+          </Box>
+          <Title>Return visa</Title>
+          <Box sx={{ my: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -166,12 +202,20 @@ export default function Orders() {
                     <TableCell>
                       {row.date} from {row.startTime} to {row.endTime}
                     </TableCell>
-                    <TableCell align="right">Book this one</TableCell>
+                    <TableCell align="right">
+                      <a
+                        href="https://oap.ind.nl/oap/en/#/TKV"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Book
+                      </a>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TabPanel>
+          </Box>
         </Box>
       )}
     </React.Fragment>
